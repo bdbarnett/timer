@@ -1,0 +1,78 @@
+from micropython import const
+
+class _TimerBase():
+    """
+    A class to create a timer with the same API and similar functionality to
+    MicroPython's machine.Timer class.
+    """
+
+    PERIODIC = const(0)
+    ONE_SHOT = const(1)
+
+    def __init__(self, id=-1, **kwargs):
+        """
+        Initializes the timer with the given parameters.
+
+        :param id: The timer ID (default is -1).
+        :type id: int
+        """
+        self.id = id
+        if kwargs:
+            self.init(**kwargs)
+
+    def init(self, *, mode, freq=-1, period=-1, callback=None):
+        """
+        Initialize the timer.
+        :param mode: Timer mode (Timer.ONE_SHOT or Timer.PERIODIC)
+        :param freq: Timer frequency in Hz (optional)
+        :param period: Timer period in milliseconds (optional, ignored if freq is specified)
+        :param callback: Callable to execute upon timer expiration
+        """
+        if mode in (self.ONE_SHOT, self.PERIODIC):
+            self._mode = mode
+        else:
+            raise ValueError("Invalid timer mode")
+
+        self._interval = 1000 / freq if freq > 0 else period
+        if self._interval <= 0:
+            raise ValueError("Invalid freq or period")
+        
+        self._callback = callback
+        self._timer = None
+        self._busy = False
+
+        self._start()
+
+    def deinit(self):
+        """
+        Deinitializes the timer.
+        """
+        while self._busy:
+            pass
+        self._stop()
+        self._mode = None
+        self._interval = 0
+        self._callback = None
+        self._timer = None
+        self._busy = False
+
+    def _start(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    
+    def _stop(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    
+    def _timer_callback(self, _):
+        """
+        Internal callback function called when the timer expires.
+        """
+        if self._busy:
+            return
+
+        self._busy = True
+        self._callback(self)
+        self._busy = False
+
+        if self._mode == self.ONE_SHOT:
+            self.deinit()
+        return self._interval  # SDL2 expects the callback to return the next interval, 0 for one-shot
