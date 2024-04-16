@@ -20,18 +20,17 @@ try:
     SDL_Init = _sdl.func("i", "SDL_Init", "I")
     SDL_AddTimer = _sdl.func("p", "SDL_AddTimer", "iCp")  # Not sure if this line is correct
     SDL_RemoveTimer = _sdl.func("v", "SDL_RemoveTimer", "p")
+
+    def SDL_TimerCallback(func):
+        return (ffi.callback("v", func, "i", lock=True)).func()
 except:
-    ffi = None
     from sdl2 import SDL_INIT_TIMER, SDL_Init, SDL_AddTimer, SDL_RemoveTimer, SDL_TimerCallback
 
 class Timer(_TimerBase):
     def _start(self):
         SDL_Init(SDL_INIT_TIMER)
-        if ffi:
-            cb = (ffi.callback("v", self._timer_callback, "i", lock=True)).func()  # Not sure if this line is correct
-        else:
-            cb = SDL_TimerCallback(self._timer_callback)
-        self._timer = SDL_AddTimer(int(self._interval), cb, self.id)  # Not sure if this line is correct
+        cb = SDL_TimerCallback(self._callback)
+        self._timer = SDL_AddTimer(int(self._interval), cb, self.id)
 
     def _stop(self):
         if self._timer:
