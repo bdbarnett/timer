@@ -1,22 +1,37 @@
 """
 This script is NOT working.  See the comments below.
+
+SDL2Display in MPDisplay uses ffi just like the implementation below, and is working completely.  However,
+it does not use callbacks in any of it's ffi functions, so it is only a partially usefull example.  See:
+
+https://pycopy.readthedocs.io/en/latest/library/ffi.html
+https://wiki.libsdl.org/SDL2/SDL_AddTimer
+
+Once this is working for MicroPython on Unix, we can create another implementation for CPython using 
 """
 from ._timerbase import _TimerBase
-import ffi
+try:
+    import ffi
 
-SDL_INIT_TIMER = 1
+    SDL_INIT_TIMER = 1
 
-_sdl = ffi.open("libSDL2-2.0.so.0")
+    _sdl = ffi.open("libSDL2-2.0.so.0")
 
-SDL_Init = _sdl.func("i", "SDL_Init", "I")
-SDL_AddTimer = _sdl.func("p", "SDL_AddTimer", "iCp")  # Not sure if this line is correct
-SDL_RemoveTimer = _sdl.func("v", "SDL_RemoveTimer", "p")
+    SDL_Init = _sdl.func("i", "SDL_Init", "I")
+    SDL_AddTimer = _sdl.func("p", "SDL_AddTimer", "iCp")  # Not sure if this line is correct
+    SDL_RemoveTimer = _sdl.func("v", "SDL_RemoveTimer", "p")
+except:
+    ffi = None
+    from sdl2 import SDL_INIT_TIMER, SDL_Init, SDL_AddTimer, SDL_RemoveTimer, SDL_TimerCallback
 
 class Timer(_TimerBase):
     def _start(self):
         SDL_Init(SDL_INIT_TIMER)
-        cb = ffi.callback("v", self._timer_callback, "i", lock=True)  # Not sure if this line is correct
-        self._timer = SDL_AddTimer(int(self._interval), cb.cfun(), self.id)  # Not sure if this line is correct
+        if ffi:
+            cb = (ffi.callback("v", self._timer_callback, "i", lock=True)).func()  # Not sure if this line is correct
+        else:
+            cb = SDL_TimerCallback(self._timer_callback)
+        self._timer = SDL_AddTimer(int(self._interval), cb, self.id)  # Not sure if this line is correct
 
     def _stop(self):
         if self._timer:
