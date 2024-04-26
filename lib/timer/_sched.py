@@ -8,7 +8,7 @@ class Timer(_TimerBase):
         super().init(**kwargs)
 
     def _start(self):
-        self._event = self._scheduler.enter(self._interval / 1000, 1, self._timer_callback)
+        self._event = self._scheduler.enter(self._interval / 1000, 1, self._handler)
         self._scheduler.run(blocking=True)
 
     def _stop(self):
@@ -17,7 +17,7 @@ class Timer(_TimerBase):
             self._event = None
         self._scheduler = None
 
-    def _timer_callback(self):
-        super()._timer_callback()
-        if self._mode == Timer.PERIODIC:
+    def _handler(self):
+        ret = super()._handler()
+        if ret:  # ret is 0 if the timer is one-shot
             self._start()  # sched.scheduler is one-shot, so we need to restart it

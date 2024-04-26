@@ -1,63 +1,56 @@
 """
-This script is NOT working.  See the comments below.
+See:
+    https://wiki.libsdl.org/SDL2/SDL_AddTimer
 
-SDL2Display in MPDisplay uses ffi and is working completely.  However, it does not use callbacks in any of its
-ffi functions, so it is only a partially usefull example.  See:
+This SHOULD work, and does on CPython, but segfaults on MicroPython:
 
-https://pycopy.readthedocs.io/en/latest/library/ffi.html
-https://wiki.libsdl.org/SDL2/SDL_AddTimer
+    from timer._sdl2 import *
 
-Once this is working for MicroPython on Unix, we can create another implementation for CPython.
+    def timerfunc(interval, param):
+        print(".")
+        return interval
 
-
-This works:
-
-import sdl2
-def timerfunc(interval, param):
-    print(".")
-    return interval
-sdl2.SDL_Init(sdl2.SDL_INIT_TIMER)
-callback = sdl2.SDL_TimerCallback(timerfunc)
-timerid = sdl2.SDL_AddTimer(1, callback, "Test")
-# sdl2.SDL_RemoveTimer(timerid)
-
-
-This segfaults unless using CPython / pysdl2 with cb = SDL_TimerCallback(self._callback) instead of cb = SDL_TimerCallback(self._timer_callback):
-
-from timer._sdl2 import Timer
-def timerfunc(interval, param):
-    print(".")
-    return interval
-tim = Timer()
-tim.Init(mode=Timer.PERIODIC, period=1, callback=timerfunc)
-# timer.deinit()
+    SDL_Init(SDL_INIT_TIMER)
+    cb = SDL_TimerCallback(timerfunc)
+    SDL_AddTimer(100, cb, 0)
 
 """
 from ._timerbase import _TimerBase
-try:
-    import ffi  # succeeds if running MicroPyton under Unix
+from sys import implementation
+
+if implementation.name == "cpython":
+    # Running CPython.  Must install https://github.com/py-sdl/py-sdl2/
+    try:
+        from sdl2 import SDL_INIT_TIMER, SDL_Init, SDL_AddTimer, SDL_RemoveTimer, SDL_TimerCallback
+    except ImportError:
+        raise ImportError("Install the py-sdl2 package using 'pip install pysdl2' and possibly 'pip install pysdl2-dll'")
+elif implementation.name == "micropython":
+    import ffi  # See https://pycopy.readthedocs.io/en/latest/library/ffi.html
 
     SDL_INIT_TIMER = 1
 
     _sdl = ffi.open("libSDL2-2.0.so.0")
 
     SDL_Init = _sdl.func("i", "SDL_Init", "I")
-    SDL_AddTimer = _sdl.func("p", "SDL_AddTimer", "iCp")  # Not sure if this line is correct
-    SDL_RemoveTimer = _sdl.func("v", "SDL_RemoveTimer", "p")
+    SDL_AddTimer = _sdl.func("P", "SDL_AddTimer", "ICP")  # Not sure if this line is correct
+    SDL_RemoveTimer = _sdl.func("v", "SDL_RemoveTimer", "P")
 
-    def SDL_TimerCallback(func):
-        return (ffi.callback("v", func, "i", lock=True)).func()
-except:
-    # Running CPython.  Must install https://github.com/py-sdl/py-sdl2/ with 'pip install pysdl2' and possibly 'pip install pysdl2-dll'
-    from sdl2 import SDL_INIT_TIMER, SDL_Init, SDL_AddTimer, SDL_RemoveTimer, SDL_TimerCallback
+    def SDL_TimerCallback(tcb):
+        return (ffi.callback("I", tcb, "IP", lock=True)).cfun()
+else:
+    raise ImportError("This module only works on CPython or MicroPython")
+
 
 class Timer(_TimerBase):
     def _start(self):
         SDL_Init(SDL_INIT_TIMER)
-        cb = SDL_TimerCallback(self._timer_callback)
-        self._timer = SDL_AddTimer(int(self._interval), cb, self.id)
+        self._handler_ref = self._handler
+        self._tcb = SDL_TimerCallback(self._handler_ref)
+        self._timer = SDL_AddTimer(self._interval, self._tcb, None)
 
     def _stop(self):
         if self._timer:
             SDL_RemoveTimer(self._timer)
             self._timer = None
+            self._tcb = None
+            self._handler_ref = None
