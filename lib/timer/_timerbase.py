@@ -1,8 +1,14 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett, 2023 Russ Hughes
 #
 # SPDX-License-Identifier: MIT
+try:
+    from micropython import const, schedule
+except ImportError:
+    def const(x):
+        return x
+    def schedule(cb, interval):
+        cb(interval)
 
-from micropython import const
 
 class _TimerBase():
     """
@@ -37,14 +43,13 @@ class _TimerBase():
         else:
             raise ValueError("Invalid timer mode")
 
-        self._interval = 1000 / freq if freq > 0 else period
-        if self._interval <= 0:
+        self._interval = int(1000 / freq) if freq > 0 else period
+        if self._interval < 1:
             raise ValueError("Invalid freq or period")
         
         self._callback = callback
         self._timer = None
         self._busy = False
-
         self._start()
 
     def deinit(self):
@@ -60,13 +65,7 @@ class _TimerBase():
         self._timer = None
         self._busy = False
 
-    def _start(self):
-        raise NotImplementedError("Subclasses must implement this method")
-    
-    def _stop(self):
-        raise NotImplementedError("Subclasses must implement this method")
-    
-    def _timer_callback(self, _):
+    def _handler(self, interval, param=None):
         """
         Internal callback function called when the timer expires.
         """
@@ -74,9 +73,16 @@ class _TimerBase():
             return
 
         self._busy = True
-        self._callback(self)
+        schedule(self._callback, 0)
         self._busy = False
 
         if self._mode == self.ONE_SHOT:
             self.deinit()
-        return self._interval  # SDL2 expects the callback to return the next interval, 0 for one-shot
+            return 0           # SDL2 expects the callback to return the next interval, 0 for one-shot
+        return self._interval
+
+    def _start(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    
+    def _stop(self):
+        raise NotImplementedError("Subclasses must implement this method")
