@@ -1,37 +1,11 @@
+# SPDX-FileCopyrightText: 2024 Brad Barnett
+#
+# SPDX-License-Identifier: MIT
 """
-This script is NOT working.  See the comments below.
+Timer using SDL2 with the same API as machine.Timer in MicroPython
 
-SDL2Display in MPDisplay uses ffi and is working completely.  However, it does not use callbacks in any of its
-ffi functions, so it is only a partially usefull example.  See:
-
-https://pycopy.readthedocs.io/en/latest/library/ffi.html
-https://wiki.libsdl.org/SDL2/SDL_AddTimer
-
-Once this is working for MicroPython on Unix, we can create another implementation for CPython.
-
-
-This works:
-
-import sdl2
-def timerfunc(interval, param):
-    print(".")
-    return interval
-sdl2.SDL_Init(sdl2.SDL_INIT_TIMER)
-callback = sdl2.SDL_TimerCallback(timerfunc)
-timerid = sdl2.SDL_AddTimer(1, callback, "Test")
-# sdl2.SDL_RemoveTimer(timerid)
-
-
-This segfaults unless using CPython / pysdl2 with cb = SDL_TimerCallback(self._callback) instead of cb = SDL_TimerCallback(self._timer_callback):
-
-from timer._sdl2 import Timer
-def timerfunc(interval, param):
-    print(".")
-    return interval
-tim = Timer()
-tim.Init(mode=Timer.PERIODIC, period=1, callback=timerfunc)
-# timer.deinit()
-
+The ffi implementation isn't working quite right, but the py-sdl2
+implementation is working fine.
 """
 from ._timerbase import _TimerBase
 try:

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2024 Brad Barnett, 2023 Russ Hughes
+#
+# SPDX-License-Identifier: MIT
+
 from micropython import const
 
 class _TimerBase():

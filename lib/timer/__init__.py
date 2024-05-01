@@ -1,20 +1,17 @@
+# SPDX-FileCopyrightText: 2024 Brad Barnett, 2023 Russ Hughes
+#
+# SPDX-License-Identifier: MIT
 """
 Universal Timer class for *Python.
 
-Currently, only MicroPython is supported, but other platforms may be added in the future.
-_sdl2.py is another implementation for MicroPython on Unix, but not currently working.
-_sched.py is a reference implementation for CPython, but it is blocking as written.
-_threading.py is a reference implementation for CPython, but it is not currently working.
-
-The goal is to be able to use 'from timer import Timer' on MicroPython on microcontrollers,
+Enables using 'from timer import Timer' on MicroPython on microcontrollers,
 on MicroPython on Unix (which doesn't have a machine.Timer) and CPython (ditto).
 
 Although _ffi.py is working for MicroPython on Unix, _sdl2.py is a much simpler implementation,
-if only it worked :).  _ffi.py uses uses MicroPython ffi to connect to libc and librt, while
-_sdl2.py uses MicroPython ffi to connect to libSDL2-2.0.  Once _sdl2.py is working, we should
-easily (fingers crossed) be able to port that to _sdl2_cpython.py and use cffi or ctypes for CPython.
-At that point, we can then focus on compatibility under CircuitPython, then remove all unused
-implementations like _sched.py and _threading.py.
+if only the ffi implementation worked :).  _ffi.py uses uses MicroPython ffi to connect to libc
+and librt, while _sdl2.py uses MicroPython ffi on Unix to connect to libSDL2-2.0 (not working)
+OR py-sdl2 on CPython to connect to libSDL2 (working).  In the future, may be able to use cffi
+or ctypes for CPython instead of py-sdl2.  No compatibility for CircuitPython yet.
 
 Usage:
     from timer import Timer
@@ -30,5 +27,7 @@ except ImportError:
     import sys
     if sys.implementation.name == "micropython":  # MicroPython on Unix
         from ._ffi import Timer
+    elif sys.implementation.name == "cpython":
+        from ._sdl2 import Timer
     else:
         Timer = None
