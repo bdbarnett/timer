@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Brad Barnett, 2023 Russ Hughes
+# SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
 try:
@@ -6,6 +6,7 @@ try:
 except ImportError:
     def const(x):
         return x
+
     def schedule(cb, interval):
         cb(interval)
 

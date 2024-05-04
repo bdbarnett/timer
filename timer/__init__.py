@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Brad Barnett, 2023 Russ Hughes
+# SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
 """
