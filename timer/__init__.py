@@ -26,7 +26,7 @@ try:
 except ImportError:
     import sys
     if sys.implementation.name == "micropython":  # MicroPython on Unix
-        from ._ffi import Timer
+        from ._librt import Timer
     elif sys.implementation.name == "cpython":
         from ._sdl2 import Timer
     else:
