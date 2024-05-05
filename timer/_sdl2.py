@@ -2,32 +2,14 @@
 #
 # SPDX-License-Identifier: MIT
 """
-Timer using SDL2 with the same API as machine.Timer in MicroPython
-
-The ffi implementation isn't working quite right, but the py-sdl2
-implementation is working fine.
+Timer using sdl2_lib with the same API as machine.Timer in MicroPython
 """
 from ._timerbase import _TimerBase
 
 try:
-    import ffi  # See https://pycopy.readthedocs.io/en/latest/library/ffi.html
-
-    SDL_INIT_TIMER = 1
-
-    _sdl = ffi.open("libSDL2-2.0.so.0")
-
-    SDL_Init = _sdl.func("i", "SDL_Init", "I")
-    SDL_AddTimer = _sdl.func("P", "SDL_AddTimer", "ICP")  # Not sure if this line is correct
-    SDL_RemoveTimer = _sdl.func("v", "SDL_RemoveTimer", "P")
-
-    def SDL_TimerCallback(tcb):
-        return (ffi.callback("I", tcb, "IP", lock=True)).cfun()
+    from sdl2_lib import SDL_INIT_TIMER, SDL_Init, SDL_AddTimer, SDL_RemoveTimer, SDL_TimerCallback
 except ImportError:
-    try:
-        from sdl2 import SDL_INIT_TIMER, SDL_Init, SDL_AddTimer, SDL_RemoveTimer, SDL_TimerCallback
-    except ImportError:
-        raise ImportError("Install the py-sdl2 package using 'pip install pysdl2' and possibly 'pip install pysdl2-dll'")
-
+    raise ImportError("SDL2 library not found")
 
 
 class Timer(_TimerBase):
