@@ -1,7 +1,7 @@
 {
     "urls": [
       ["lib/timer/__init__.py", "github:bdbarnett/timer/timer/__init__.py"],
-      ["lib/timer/_ffi.py", "github:bdbarnett/timer/timer/_ffi.py"],
+      ["lib/timer/_librt.py", "github:bdbarnett/timer/timer/_librt.py"],
       ["lib/timer/_sdl2.py", "github:bdbarnett/timer/timer/_sdl2.py"],
       ["lib/timer/_timerbase.py", "github:bdbarnett/timer/timer/_timerbase.py"],
       ["examples/timer_simpletest.py", "github:bdbarnett/timer/examples/timer_simpletest.py"]
