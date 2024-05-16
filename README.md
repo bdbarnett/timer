@@ -2,6 +2,8 @@
 
 A timer class for MicroPython on Unix and CPython that provides the same functionality and API as MicroPython's machine.Timer class on microcontrollers.  Will use MicroPython's machine.Timer if run on a microcontroller, so it may be used in all 3 scenarios.  Currently does not support CircuitPython.
 
+Requires [sdl2_lib](https://github.com/bdbarnett/sdl2_lib) on CPython, which requires [SDL2](https://github.com/libsdl-org/SDL/tree/SDL2)
+
 Usage is the same as MicroPython's timer, except use `from timer import Timer` instead of `from machine import Timer`:
 
 ```
