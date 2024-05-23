@@ -2,14 +2,19 @@
 #
 # SPDX-License-Identifier: MIT
 """
-Timer using sdl2_lib with the same API as machine.Timer in MicroPython
+Timer using sdl2_lib or PySDL2 with the same API as machine.Timer in MicroPython.
+
+sdl2_lib is included in MPDisplay.  PySDL2 is available at https://pypi.org/project/PySDL2/
 """
 from ._timerbase import _TimerBase
 
 try:
     from sdl2_lib import SDL_INIT_TIMER, SDL_Init, SDL_AddTimer, SDL_RemoveTimer, SDL_TimerCallback
 except ImportError:
-    raise ImportError("SDL2 library not found")
+    try:
+        from sdl2 import SDL_INIT_TIMER, SDL_Init, SDL_AddTimer, SDL_RemoveTimer, SDL_TimerCallback
+    except ImportError:
+        raise ImportError("SDL2 library not found")
 
 
 class Timer(_TimerBase):

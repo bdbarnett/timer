@@ -51,7 +51,7 @@ class _TimerBase():
         self._callback = callback
         self._timer = None
         self._busy = False
-        self._start()
+        self._start()  # _start() is implemented in subclasses
 
     def deinit(self):
         """
@@ -59,19 +59,22 @@ class _TimerBase():
         """
         while self._busy:
             pass
-        self._stop()
+
+        self._stop()  # _stop() is implemented in subclasses
         self._mode = None
         self._interval = 0
         self._callback = None
         self._timer = None
-        self._busy = False
 
     def _handler(self, interval, param=None):
         """
         Internal callback function called when the timer expires.
+        SDL2 timers call the handler with the interval and a user-defined parameter,
+        while librt timers call the handler with the interval only.
+        They are ignored here.
         """
-        if self._busy:
-            return
+        while self._busy:
+            pass
 
         self._busy = True
         schedule(self._callback, 0)
@@ -79,7 +82,7 @@ class _TimerBase():
 
         if self._mode == self.ONE_SHOT:
             self.deinit()
-            return 0           # SDL2 expects the callback to return the next interval, 0 for one-shot
+            return 0  # SDL2 expects the callback to return the next interval, 0 for one-shot
         return self._interval
 
     def _start(self):

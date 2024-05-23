@@ -129,7 +129,6 @@ def timer_settime(tid, period_ms, periodic):
 # Timer class
 
 class Timer(_TimerBase):
-
     def _start(self):
         self.id = self.id if self.id != -1 else 0xF  # id must be non-negative, so we use 0xF as a default
         self._timer = timer_create(self.id)
@@ -138,7 +137,7 @@ class Timer(_TimerBase):
         self._action = sigaction(SIGRTMIN + self.id, self._handler_ref)
 
     def _stop(self):
-        timer_settime(self._timer, 0, False)
+        # timer_settime(self._timer, 0, False)
         timer_delete(self._timer)
         self._timer = None
         self._action = None

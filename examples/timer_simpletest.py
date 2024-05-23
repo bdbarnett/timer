@@ -1,32 +1,32 @@
 """
 This is a simple test script that tests the basic functionality of the timer class.
+
+It creates a periodic timer in a class instance and a one-shot timer that stops the periodic timer.
 """
 
 from timer import Timer
-try:
-    from micropython import schedule
-except ImportError:
-    schedule = lambda f, x: f(x)
 
 
-def testfunc(_):
-    print(".")
+class TimerTest:
+    def __init__(self):
+        self._tim = Timer(1)
 
-def schedule_testfunc(t):
-    schedule(testfunc, 0)
+    def start(self, period):
+        self._counter = 0
+        self._tim.init(mode=Timer.PERIODIC, period=period, callback=self.do_something)
+        print("TimerTest:  timer started...")
 
-def cancel(_):
-    print("Cancelling timer 1.")
-    tim1.deinit()
+    def do_something(self, t):
+        self._counter += 1
 
-def schedule_cancel(t):
-    schedule(cancel, 0)
+    def stop(self, t=None):
+        self._tim.deinit()
+        print(f"TimerTest:  timer stopped after {self._counter:,} calls.")
 
-# Create a timer that prints a dot every 500ms
-tim1 = Timer()
-print("Starting timer 1.")
-tim1.init(mode=Timer.PERIODIC, period=500, callback=schedule_testfunc)
+# Create a timer that calls tt.do_something every 1ms
+tt = TimerTest()
+tt.start(1)  
 
-# Create a timer that cancels the first timer after 5 seconds
-tim2 = Timer()
-tim2.init(mode=Timer.ONE_SHOT, period=5000, callback=schedule_cancel)
+# Create a timer that stops the first timer after 5 seconds
+tim2 = Timer(2)
+tim2.init(mode=Timer.ONE_SHOT, period=5000, callback=tt.stop)
