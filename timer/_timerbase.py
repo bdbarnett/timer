@@ -73,8 +73,8 @@ class _TimerBase():
         while librt timers call the handler with the interval only.
         They are ignored here.
         """
-        while self._busy:
-            pass
+        if self._busy:
+            return
 
         self._busy = True
         schedule(self._callback, 0)
