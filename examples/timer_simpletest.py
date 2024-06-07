@@ -5,11 +5,11 @@ It creates a periodic timer in a class instance and a one-shot timer that stops 
 """
 
 from timer import Timer
-
+from sys import platform
 
 class TimerTest:
     def __init__(self):
-        self._tim = Timer(1)
+        self._tim = Timer(-1 if platform == "rp2" else 1)
 
     def start(self, period):
         self._counter = 0
@@ -28,5 +28,5 @@ tt = TimerTest()
 tt.start(1)  
 
 # Create a timer that stops the first timer after 5 seconds
-tim2 = Timer(2)
+tim2 = Timer(-1 if platform == "rp2" else 2)
 tim2.init(mode=Timer.ONE_SHOT, period=5000, callback=tt.stop)
